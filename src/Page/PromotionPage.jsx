@@ -9,6 +9,7 @@ const createForm = Form.create;
 const FormItem = Form.Item;
 const RangePicker = DatePicker.RangePicker;
 const Panel = Collapse.Panel;
+const InputGroup = Input.Group;
 
 
 let Demo = React.createClass({
@@ -37,45 +38,8 @@ let Demo = React.createClass({
     });
   },
 
-  checkBirthday(rule, value, callback) {
-    if (value && value.getTime() >= Date.now()) {
-      callback(new Error('你不可能在未来出生吧!'));
-    } else {
-      callback();
-    }
-  },
-
-  checkPrime(rule, value, callback) {
-    if (value !== 11) {
-      callback(new Error('8~12之间的质数明明是11啊!'));
-    } else {
-      callback();
-    }
-  },
-
-  userExists(rule, value, callback) {
-    if (!value) {
-      callback();
-    } else {
-      setTimeout(() => {
-        if (value === 'JasonWood') {
-          callback([new Error('抱歉，该用户名已被占用。')]);
-        } else {
-          callback();
-        }
-      }, 800);
-    }
-  },
 
   render() {
-    const address = [{
-      value: 'zhejiang',
-      label: '浙江',
-      children: [{
-        value: 'hangzhou',
-        label: '杭州',
-      }],
-    }];
     const { getFieldProps } = this.props.form;
 
     const formItemLayout = {
@@ -97,7 +61,6 @@ let Demo = React.createClass({
         { required: true,  message: '不填写活动说明，怎么让用户了解你的活动' },
       ],
     });
-
     return (
       <Form horizontal form={this.props.form}>
         <FormItem
@@ -129,12 +92,10 @@ let Demo = React.createClass({
           </Upload>
         </FormItem>
 
-
-        <Goodslistbox/>
-
+        <Goodslistbox form={this.props.form} />
 
         <FormItem
-          wrapperCol={{ span: 12, offset: 7 }} >
+          wrapperCol={{ span: 12, offset: 9 }} >
           <Button type="primary" onClick={this.handleSubmit}>确定</Button>
           &nbsp;&nbsp;&nbsp;
           <Button type="ghost" onClick={this.handleReset}>重置</Button>
@@ -146,23 +107,191 @@ let Demo = React.createClass({
 Demo = createForm()(Demo);
 
 
+/**
+ * 创建一个商品列表控件
+ * @param  {[goodsList]} 这是商品的数据
+ * @param {[form 这个数据对应下来的表单]}
+ * @return {[type]}   返回这个商品控件
+ */
 const Goodslistbox = React.createClass({
+  getInitialState(){
+    let dataSource = this.props.goodsList;
+    if(!dataSource){
+      dataSource = [];
+    }
+    return {
+      dataSource:dataSource,
+      showForm : false,
+      showTable:true,
+    }
+  },
+  checkPrice(rule, value, callback) {
+    if (!value || value.indexOf("/")<=0) {
+      callback(new Error('注意写正确格式： 5元/斤 或 1.2元/个 等'));
+    } else {
+      callback();
+    }
+  },
+  handleAdd(e){
+    e.preventDefault();
+    this.props.form.validateFieldsAndScroll((errors, values) => {
+      if (!!errors) {
+        console.log('Errors in form!!!');
+        return;
+      }
+      let info = {goodsName:values.goodsName,goodIntro:values.goodIntro,price:values.price,key:new Date().getTime()}
+      this.state.dataSource.push(info);
+      this.setState({dataSource:this.state.dataSource,showForm:false,showTable:true});
+    });
+  },
+  handleDel(key){
+    let newDataSource = this.state.dataSource.filter((info)=>{
+      if(info.key == key) return false;
+      return true;
+    });
+    this.setState({dataSource: newDataSource});
+  },
+  handleEdit(key){
+    let infos = this.state.dataSource.filter((info)=>{
+      if(info.key == key) return true;
+      return false;
+    });
+    this.props.form.setFieldsValue({
+      goodsName: infos[0].goodsName,
+      price: infos[0].price,
+      goodIntro: infos[0].goodIntro,
+    });
+    this.setState({editKey:key});
+    this.showForm();
+  },
+  handleUpdate(key){
+    this.props.form.validateFieldsAndScroll((errors, values) => {
+      if (!!errors) {
+        console.log('Errors in form!!!');
+        return;
+      }
+      let dataSource = this.state.dataSource.map((data)=>{
+        if(data.key == key){
+          data.goodsName = values.goodsName;
+          data.goodIntro = values.goodIntro;
+          data.price = values.price;
+        }
+        return data;
+      });
+      console.log(dataSource);
+      this.setState({dataSource:dataSource,showForm:false,showTable:true,editKey:null});
+    });
+  },
+  showForm(){
+    this.setState({showForm:true,showTable:true});
+  },
   render(){
-    return <Row>
-      <Col span="16" offset="3">
-        <div className="goodslistbox">
-          <div className="goodslistbox-tip">活动商品</div>
-          <Collapse defaultActiveKey={['1']}>
-            <Panel header="商品 1" key="1">
-              <p>123456</p>
-            </Panel>
-          </Collapse>
-          <div className="btnGroup">
-            <Button  size="large"><Icon type="plus" />添加商品</Button>
-          </div>
+    const columns = [{
+      title: '商品名称',
+      dataIndex: 'goodsName',
+      key: 'goodsName',
+    }, {
+      title: '价格',
+      dataIndex: 'price',
+      key: 'price',
+    }, {
+      title: '操作',
+      render: (text, record)=>{
+        return (
+          <span>
+            <a href="javascript:;" onClick={()=>{this.handleEdit(record.key)}}>编辑</a>
+            <span className="ant-divider"></span>
+            <a href="javascript:;"  onClick={()=>{this.handleDel(record.key)}}>删除</a>
+          </span>
+        );
+      }
+    }];
+
+    const goodInputForm = ()=>{
+      let showForm = this.state.showForm;
+      let editKey = this.state.editKey;
+      if(showForm){
+        return <div>
+          <FormItem
+            {...formItemLayout}
+            label="商品名称："
+            hasFeedback>
+            <Input  {...goodsNameProps} placeholder="请输入商品名称"/>
+          </FormItem>
+          <FormItem
+            {...formItemLayout}
+            label="商品价格："
+            hasFeedback>
+            <Input {...priceProps} placeholder="格式如： 5元/斤，3元/小时，10元/个 等等" />
+          </FormItem>
+          <FormItem
+            {...formItemLayout}
+            label="描述："
+            hasFeedback>
+            <Input {...textareaProps} type="textarea" placeholder="写得详细一些，商品会更吸引人。" rows="5" />
+          </FormItem>
+          <FormItem
+            wrapperCol={{ span: 12, offset: 9 }} >
+            {editKey ? <Button type="ghost" onClick={()=>{this.handleUpdate(editKey)}}>更新商品</Button> : <Button type="ghost" onClick={this.handleAdd}>提交商品</Button>}
+          </FormItem>
         </div>
-      </Col>
-    </Row>
+      }
+    }
+
+    const goodsTable = ()=>{
+      let showTable = this.state.showTable;
+      const showAddBtn = ()=>{
+        if(!this.state.showForm){
+          return (
+            <FormItem
+              wrapperCol={{ span: 12, offset: 9 }} >
+              <Button type="ghost" onClick={this.showForm}>添加商品</Button>
+            </FormItem>
+          )
+        }
+      }
+      if(showTable){
+        return <div>
+          <Table dataSource={this.state.dataSource} columns={columns} />
+          {showAddBtn()}
+        </div>
+      }
+    }
+
+    const { getFieldProps } = this.props.form;
+
+    const formItemLayout = {
+      labelCol: { span: 5 },
+      wrapperCol: { span: 14 },
+    };
+    const goodsNameProps = getFieldProps('goodsName', {
+      rules: [
+        { required: true, min: 3, message: '活动名称至少为 3 个字' },
+      ],
+    });
+    const textareaProps = getFieldProps('goodIntro', {
+      rules: [
+        { required: true,  message: '您需要填写商品描述' },
+      ],
+    });
+    const priceProps = getFieldProps('price', {
+      rules: [
+        { validator: this.checkPrice}],
+    });
+    return (
+      <div className="goodslistbox">
+        <Row>
+          <Col span="16" offset="3">
+            <h3 className="text-center" style={{padding:"10"}}>活动商品</h3>
+
+            {goodsTable()}
+
+            {goodInputForm()}
+          </Col>
+        </Row>
+      </div>
+
+    )
   }
 });
 
@@ -255,7 +384,6 @@ const PromotionIndexPage = React.createClass({
           <div style={{clear:'both'}}></div>
         </div>
         <Table columns={this.getColumns()} dataSource={this.state.data} key="c" />
-        {this.props.children || "Welcome to your Inbox"}
       </QueueAnim>
   }
 });
