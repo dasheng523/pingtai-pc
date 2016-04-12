@@ -44,6 +44,9 @@ const App = React.createClass({
                 <Menu.Item key="panicBuyPage">
                   <Link to="/panicBuyPage">抢购活动</Link>
                 </Menu.Item>
+                <Menu.Item key="goodsManagerPage">
+                  <Link to="/goodsManagerPage">商品管理</Link>
+                </Menu.Item>
                 <Menu.Item key="shopInfo">
                   <Link to="/shopInfo">商户资料</Link>
                 </Menu.Item>

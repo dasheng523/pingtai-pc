@@ -1,5 +1,5 @@
 import React from 'react';
-import { QueueAnim, Icon, Button, Table, Popconfirm, message, Breadcrumb, Select, Radio, Checkbox, DatePicker, InputNumber, Form, Cascader, Input, Upload, Collapse, Row, Col } from 'antd';
+import { QueueAnim, Icon, Button, Table, Popconfirm, message, Breadcrumb, Select, Radio, Checkbox, DatePicker, InputNumber, Form, Cascader, Input, Upload, Collapse, Row, Col, Transfer } from 'antd';
 import { hashHistory } from 'react-router'
 import './PromotionPage.less';
 
@@ -12,15 +12,7 @@ const Panel = Collapse.Panel;
 const InputGroup = Input.Group;
 
 
-let Demo = React.createClass({
-  componentDidMount() {
-    this.props.form.setFieldsValue({
-      eat: true,
-      sleep: true,
-      beat: true,
-    });
-  },
-
+let PromotionForm = React.createClass({
   handleReset(e) {
     e.preventDefault();
     this.props.form.resetFields();
@@ -38,6 +30,43 @@ let Demo = React.createClass({
     });
   },
 
+  getInitialState() {
+    return {
+      mockData: [],
+      targetKeys: [],
+    };
+  },
+  componentDidMount() {
+    this.getMock();
+  },
+  getMock() {
+    let targetKeys = [];
+    let mockData = [];
+    for (let i = 0; i < 20; i++) {
+      const data = {
+        key: i,
+        title: `内容${i + 1}`,
+        description: `内容${i + 1}的描述`,
+        chosen: Math.random() * 2 > 1
+      };
+      if (data.chosen) {
+        targetKeys.push(data.key);
+      }
+      mockData.push(data);
+    }
+    this.setState({ mockData, targetKeys });
+  },
+  handleChange(targetKeys) {
+    this.setState({ targetKeys });
+  },
+  renderFooter() {
+    return (
+      <Button type="ghost" size="small" style={{ float: 'right', margin: '5' }}
+        onClick={this.getMock}>
+        刷新
+      </Button>
+    );
+  },
 
   render() {
     const { getFieldProps } = this.props.form;
@@ -91,8 +120,24 @@ let Demo = React.createClass({
             </Button>
           </Upload>
         </FormItem>
-
-        <Goodslistbox form={this.props.form} />
+        <FormItem
+          {...formItemLayout}
+          label="活动商品：">
+          <Transfer
+                  dataSource={this.state.mockData}
+                  showSearch
+                  listStyle={{
+                    width: 200,
+                    height: 300,
+                  }}
+                  operations={['上架商品', '下架商品']}
+                  notFoundContent="暂上架商品"
+                  titles={['所有商品', '已上架商品']}
+                  targetKeys={this.state.targetKeys}
+                  onChange={this.handleChange}
+                  render={item => `${item.title}-${item.description}`}
+                  footer={this.renderFooter} />
+        </FormItem>
 
         <FormItem
           wrapperCol={{ span: 12, offset: 9 }} >
@@ -104,196 +149,9 @@ let Demo = React.createClass({
     );
   },
 });
-Demo = createForm()(Demo);
+PromotionForm = createForm()(PromotionForm);
 
 
-/**
- * 创建一个商品列表控件
- * @param  {[goodsList]} 这是商品的数据
- * @param {[form 这个数据对应下来的表单]}
- * @return {[type]}   返回这个商品控件
- */
-const Goodslistbox = React.createClass({
-  getInitialState(){
-    let dataSource = this.props.goodsList;
-    if(!dataSource){
-      dataSource = [];
-    }
-    return {
-      dataSource:dataSource,
-      showForm : false,
-      showTable:true,
-    }
-  },
-  checkPrice(rule, value, callback) {
-    if (!value || value.indexOf("/")<=0) {
-      callback(new Error('注意写正确格式： 5元/斤 或 1.2元/个 等'));
-    } else {
-      callback();
-    }
-  },
-  handleAdd(e){
-    e.preventDefault();
-    this.props.form.validateFieldsAndScroll((errors, values) => {
-      if (!!errors) {
-        console.log('Errors in form!!!');
-        return;
-      }
-      let info = {goodsName:values.goodsName,goodIntro:values.goodIntro,price:values.price,key:new Date().getTime()}
-      this.state.dataSource.push(info);
-      this.setState({dataSource:this.state.dataSource,showForm:false,showTable:true});
-    });
-  },
-  handleDel(key){
-    let newDataSource = this.state.dataSource.filter((info)=>{
-      if(info.key == key) return false;
-      return true;
-    });
-    this.setState({dataSource: newDataSource});
-  },
-  handleEdit(key){
-    let infos = this.state.dataSource.filter((info)=>{
-      if(info.key == key) return true;
-      return false;
-    });
-    this.props.form.setFieldsValue({
-      goodsName: infos[0].goodsName,
-      price: infos[0].price,
-      goodIntro: infos[0].goodIntro,
-    });
-    this.setState({editKey:key});
-    this.showForm();
-  },
-  handleUpdate(key){
-    this.props.form.validateFieldsAndScroll((errors, values) => {
-      if (!!errors) {
-        console.log('Errors in form!!!');
-        return;
-      }
-      let dataSource = this.state.dataSource.map((data)=>{
-        if(data.key == key){
-          data.goodsName = values.goodsName;
-          data.goodIntro = values.goodIntro;
-          data.price = values.price;
-        }
-        return data;
-      });
-      console.log(dataSource);
-      this.setState({dataSource:dataSource,showForm:false,showTable:true,editKey:null});
-    });
-  },
-  showForm(){
-    this.setState({showForm:true,showTable:true});
-  },
-  render(){
-    const columns = [{
-      title: '商品名称',
-      dataIndex: 'goodsName',
-      key: 'goodsName',
-    }, {
-      title: '价格',
-      dataIndex: 'price',
-      key: 'price',
-    }, {
-      title: '操作',
-      render: (text, record)=>{
-        return (
-          <span>
-            <a href="javascript:;" onClick={()=>{this.handleEdit(record.key)}}>编辑</a>
-            <span className="ant-divider"></span>
-            <a href="javascript:;"  onClick={()=>{this.handleDel(record.key)}}>删除</a>
-          </span>
-        );
-      }
-    }];
-
-    const goodInputForm = ()=>{
-      let showForm = this.state.showForm;
-      let editKey = this.state.editKey;
-      if(showForm){
-        return <div>
-          <FormItem
-            {...formItemLayout}
-            label="商品名称："
-            hasFeedback>
-            <Input  {...goodsNameProps} placeholder="请输入商品名称"/>
-          </FormItem>
-          <FormItem
-            {...formItemLayout}
-            label="商品价格："
-            hasFeedback>
-            <Input {...priceProps} placeholder="格式如： 5元/斤，3元/小时，10元/个 等等" />
-          </FormItem>
-          <FormItem
-            {...formItemLayout}
-            label="描述："
-            hasFeedback>
-            <Input {...textareaProps} type="textarea" placeholder="写得详细一些，商品会更吸引人。" rows="5" />
-          </FormItem>
-          <FormItem
-            wrapperCol={{ span: 12, offset: 9 }} >
-            {editKey ? <Button type="ghost" onClick={()=>{this.handleUpdate(editKey)}}>更新商品</Button> : <Button type="ghost" onClick={this.handleAdd}>提交商品</Button>}
-          </FormItem>
-        </div>
-      }
-    }
-
-    const goodsTable = ()=>{
-      let showTable = this.state.showTable;
-      const showAddBtn = ()=>{
-        if(!this.state.showForm){
-          return (
-            <FormItem
-              wrapperCol={{ span: 12, offset: 9 }} >
-              <Button type="ghost" onClick={this.showForm}>添加商品</Button>
-            </FormItem>
-          )
-        }
-      }
-      if(showTable){
-        return <div>
-          <Table dataSource={this.state.dataSource} columns={columns} />
-          {showAddBtn()}
-        </div>
-      }
-    }
-
-    const { getFieldProps } = this.props.form;
-
-    const formItemLayout = {
-      labelCol: { span: 5 },
-      wrapperCol: { span: 14 },
-    };
-    const goodsNameProps = getFieldProps('goodsName', {
-      rules: [
-        { required: true, min: 3, message: '活动名称至少为 3 个字' },
-      ],
-    });
-    const textareaProps = getFieldProps('goodIntro', {
-      rules: [
-        { required: true,  message: '您需要填写商品描述' },
-      ],
-    });
-    const priceProps = getFieldProps('price', {
-      rules: [
-        { validator: this.checkPrice}],
-    });
-    return (
-      <div className="goodslistbox">
-        <Row>
-          <Col span="16" offset="3">
-            <h3 className="text-center" style={{padding:"10"}}>活动商品</h3>
-
-            {goodsTable()}
-
-            {goodInputForm()}
-          </Col>
-        </Row>
-      </div>
-
-    )
-  }
-});
 
 const PromotionPage = React.createClass({
   render(){
@@ -404,7 +262,7 @@ const PromotionAddPage = React.createClass({
             <Icon type="info-circle" className="blue-text" style={{marginRight:"5"}} />
             确保活动的真实性才能吸引到用户。
           </div>
-          <Demo key="d"/>
+          <PromotionForm key="d"/>
         </QueueAnim>
     )
   },

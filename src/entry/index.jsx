@@ -7,8 +7,9 @@ import MainFrame from '../Page/MainFrame';
 import LoginPage from '../Page/LoginPage';
 import MainPage from '../Page/MainPage';
 import ShopInfoPage from '../Page/ShopInfoPage';
-import PanicBuyPage from '../Page/PanicBuyPage';
 import {PromotionPage,PromotionAddPage,PromotionIndexPage} from '../Page/PromotionPage';
+import {GoodsPage, GoodsIndexPage, GoodsAddPage} from '../Page/GoodsManagerPage';
+import {PanicBuyMainPage, PanicBuyIndexPage, PanicBuyAddPage} from '../Page/PanicBuyManagerPage';
 
 const authHandler = (nextState, replace) =>{
   //replace('/');
@@ -25,8 +26,16 @@ ReactDOM.render(<Router history={hashHistory}>
         <Route path="add" breadcrumbName="添加活动" component={PromotionAddPage} />
       </Route>
 
+      <Route path="goodsManagerPage" breadcrumbName="商品管理" component={GoodsPage}>
+        <IndexRoute component={GoodsIndexPage} />
+        <Route path="add" breadcrumbName="添加商品" component={GoodsAddPage} />
+      </Route>
 
-      <Route path="panicBuyPage" breadcrumbName="抢购活动" component={PanicBuyPage} />
+      <Route path="panicBuyPage" breadcrumbName="抢购活动" component={PanicBuyMainPage}>
+        <IndexRoute component={PanicBuyIndexPage} />
+        <Route path="add" breadcrumbName="添加活动" component={PanicBuyAddPage} />
+      </Route>
+
     </Route>
     <Route path="login" component={LoginPage} />
   </Router>
