@@ -10,8 +10,13 @@ import ShopInfoPage from '../Page/ShopInfoPage';
 import {PromotionPage,PromotionAddPage,PromotionIndexPage} from '../Page/PromotionPage';
 import {GoodsPage, GoodsIndexPage, GoodsAddPage} from '../Page/GoodsManagerPage';
 import {PanicBuyMainPage, PanicBuyIndexPage, PanicBuyAddPage} from '../Page/PanicBuyManagerPage';
+import BufferState from '../component/BufferState';
 
 const authHandler = (nextState, replace) =>{
+  let buffer = new BufferState();
+  if(!buffer.getShopInfo()){
+    replace("/login");
+  }
   //replace('/');
 }
 

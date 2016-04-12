@@ -19,5 +19,7 @@ module.exports = {
       price: '5元/包',
       status: '正常'
     }]},
-  'POST /goodsInfo.json' : {id: 45, intro: "sdfsdfsdf" , name: "545454878" , price: "121元/斤", uploadList: [{uid:"1",name: "xxx.jpg", state: "done", thumbUrl:"https://os.alipayobjects.com/rmsportal/NDbkJhpzmLxtPhB.png", url:"https://os.alipayobjects.com/rmsportal/NDbkJhpzmLxtPhB.png"}]}
+  'POST /goodsInfo.json' : {id: 45, intro: "sdfsdfsdf" , name: "545454878" , price: "121元/斤", uploadList: [{uid:"1",name: "xxx.jpg", state: "done", thumbUrl:"https://os.alipayobjects.com/rmsportal/NDbkJhpzmLxtPhB.png", url:"https://os.alipayobjects.com/rmsportal/NDbkJhpzmLxtPhB.png"}]},
+  'POST /isLogin.json' : {"status":1,"data":{"id":"2","user_id":"1","name":"\u591c\u58f0\u6280\u672f","intro":"1111","phone":"15655656561","address":"\u57ce\u5317\u8def\u82b1\u679c\u5c71","lng":"11.00000","lat":"11.00000","ctime":"11","scope_business":"0"}},
+  
 };
