@@ -16,4 +16,12 @@ export default class BufferState{
   getShopInfo(){
     return this.bufferState.get('shopInfo');
   }
+
+  setCode(code){
+    this.bufferState.set('code',code);
+  }
+
+  getCode(){
+    return this.bufferState.get('code');
+  }
 }

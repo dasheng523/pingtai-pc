@@ -1,9 +1,14 @@
 import React from 'react';
 import { Menu, Breadcrumb, Icon } from 'antd';
-import config from '../component/Config';
-import BufferState from '../component/BufferState';
 import reqwest from 'reqwest';
 import { hashHistory } from 'react-router'
+
+import config from '../component/Config';
+import BufferState from '../component/BufferState';
+import Cookie from '../component/YsCookie';
+import Utils from '../component/YsUtils';
+import cookie from 'react-cookie';
+
 import './LoginPage.less';
 
 
@@ -18,20 +23,24 @@ const LoginPage = React.createClass({
   componentDidMount(){
 
     var interval = setInterval(() => {
-      reqwest({
-        url: '/isLogin.json',
-        method: 'post',
-        data: {code:this.state.code},
-        type: 'json',
-        success: (result) => {
+      Utils.fetchData(
+        '/oauthCode.json',
+        {code:this.state.code},
+        (result) => {
           let buffer = new BufferState();
           if(result.status == 1){
-            buffer.setShopInfo(result.data);
-            hashHistory.replace('/shopInfo');
+              cookie.save('code',this.state.code);
+              buffer.setCode(this.state.code);
+            if(result.data.id){
+              buffer.setShopInfo(result.data);
+              hashHistory.replace('/promotionPage');
+            }else{
+              hashHistory.replace('/openShop');
+            }
             clearInterval(this.state.interval);
           }
         }
-      });
+      );
     },3000);
     this.setState({interval:interval});
 

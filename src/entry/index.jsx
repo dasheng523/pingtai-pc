@@ -2,28 +2,56 @@ import '../common/lib';
 import ReactDOM from 'react-dom';
 import React from 'react';
 import { Router, Route, Link, hashHistory, IndexRoute } from 'react-router'
+import reqwest from 'reqwest';
+import cookie from 'react-cookie';
 
 import MainFrame from '../Page/MainFrame';
 import LoginPage from '../Page/LoginPage';
 import MainPage from '../Page/MainPage';
-import ShopInfoPage from '../Page/ShopInfoPage';
+import {ShopInfoPage,OpenShopPage} from '../Page/ShopInfoPage';
 import {PromotionPage,PromotionAddPage,PromotionIndexPage} from '../Page/PromotionPage';
 import {GoodsPage, GoodsIndexPage, GoodsAddPage} from '../Page/GoodsManagerPage';
 import {PanicBuyMainPage, PanicBuyIndexPage, PanicBuyAddPage} from '../Page/PanicBuyManagerPage';
 import BufferState from '../component/BufferState';
+import Utils from '../component/YsUtils';
+
 
 const authHandler = (nextState, replace) =>{
   let buffer = new BufferState();
-  if(!buffer.getShopInfo()){
-    replace("/login");
+  if(!buffer.getCode()){
+      let code = cookie.load('code');
+      if(code){
+        Utils.fetchData(
+          '/oauthCode.json',
+          {code:code},
+          (result) => {
+            if(result.status==1){
+              buffer.setCode(code);
+              if(result.data.id){
+                buffer.setShopInfo(result.data);
+                hashHistory.replace('/promotionPage');
+              }else{
+                hashHistory.replace('/openShop');
+              }
+            }
+            else{
+              cookie.remove('code');
+              replace("/login");
+            }
+          },
+        )
+      }
+      else{
+        replace("/login");
+      }
   }
-  //replace('/');
+
 }
 
 
 ReactDOM.render(<Router history={hashHistory}>
     <Route path="/" component={MainFrame} onEnter={authHandler}>
-      <IndexRoute component={MainPage} />
+      <IndexRoute component={PromotionPage} />
       <Route path="shopInfo" breadcrumbName="商户信息" component={ShopInfoPage} />
 
       <Route path="promotionPage" breadcrumbName="特惠活动" component={PromotionPage}>
@@ -43,5 +71,6 @@ ReactDOM.render(<Router history={hashHistory}>
 
     </Route>
     <Route path="login" component={LoginPage} />
+    <Route path="openShop" breadcrumbName="开店" component={OpenShopPage} onEnter={authHandler} />
   </Router>
   , document.getElementById('react-content'));

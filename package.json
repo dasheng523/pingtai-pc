@@ -11,10 +11,9 @@
     "babel-plugin-antd": "0.3.x",
     "es3ify-loader": "^0.1.0",
     "react": "0.14.x",
+    "react-cookie": "^0.4.5",
     "react-dom": "0.14.x",
-    "react-redux": "^4.4.2",
     "react-router": "^2.0.1",
-    "redux": "^3.4.0",
     "reqwest": "^2.0.5"
   },
   "devDependencies": {
@@ -27,8 +26,7 @@
     "eslint": "2.x",
     "eslint-config-airbnb": "6.x",
     "eslint-plugin-react": "4.x",
-    "pre-commit": "1.x",
-    "redux-devtools": "^3.2.0"
+    "pre-commit": "1.x"
   },
   "pre-commit": [
     "lint"

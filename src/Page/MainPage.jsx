@@ -14,7 +14,7 @@ const MainPage = React.createClass({
 
   render(){
     return <div className="t">
-      main
+      欢迎访问点多多商户后台
     </div>
   }
 });

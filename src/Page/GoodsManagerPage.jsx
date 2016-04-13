@@ -2,6 +2,8 @@ import React from 'react';
 import { QueueAnim, Icon, Button, Table, Popconfirm, message, Breadcrumb, Select, Radio, Checkbox, DatePicker, InputNumber, Form, Cascader, Input, Upload, Collapse, Row, Col } from 'antd';
 import { hashHistory, Link } from 'react-router'
 import reqwest from 'reqwest';
+
+import Utils from '../component/YsUtils'
 import { YsPicUpload } from '../component/YsUpload'
 import './PromotionPage.less';
 
@@ -73,16 +75,16 @@ const GoodsIndexPage = React.createClass({
     console.log('请求参数：', params);
     this.setState({ loading: true });
     reqwest({
-      url: '/goods.json',
+      url: '/goodslist.json',
       method: 'post',
       data: params,
       type: 'json',
       success: (result) => {
         const pagination = this.state.pagination;
-        pagination.total = result.totalCount;
+        pagination.total = result.data.totalCount;
         this.setState({
           loading: false,
-          data: result.data,
+          data: result.data.list,
           pagination,
         });
       }
@@ -91,12 +93,20 @@ const GoodsIndexPage = React.createClass({
 
   getColumns(){
     let confirm = (record)=>{
-      console.log(record);
+
       let newData = this.state.data.filter((info) => {
         return info.key != record.key;
       });
-      this.setState({data:newData});
-      message.success('点击了确定');
+      Utils.fetchDataWithCode('/delGoods.json',{id:record.key},(rs)=>{
+        if(rs.status==1){
+          this.setState({data:newData});
+          message.success(rs.data);
+        }
+        else{
+          message.error(rs.data);
+        }
+      });
+
     }
     return [{
       title: '商品名称',
@@ -164,20 +174,16 @@ const GoodsAddPage = createForm()(React.createClass({
     }
     this.setState({ loading: true });
     params = query;
-    reqwest({
-      url: '/goodsInfo.json',
-      method: 'post',
-      data: params,
-      type: 'json',
-      success: (result) => {
-        this.setState({ loading: false ,data: result});
-        this.props.form.setFieldsValue({
-          name: result.name,
-          price: result.price,
-          intro: result.intro,
-        });
-      }
+
+    Utils.fetchDataWithCode('/goodsInfo.json',params,(result) => {
+      this.setState({ loading: false ,data: result.data});
+      this.props.form.setFieldsValue({
+        name: result.data.name,
+        price: result.data.price,
+        intro: result.data.intro,
+      });
     });
+
   },
 
   componentDidMount(){
@@ -206,7 +212,18 @@ const GoodsAddPage = createForm()(React.createClass({
           return;
         }
         values.uploadList = ysUpload.getUploadFiles();
-        console.log(values);
+        let goodsInfo = this.state.data;
+        Object.assign(goodsInfo,values);
+        Utils.fetchDataWithCode('/goodsCommit.json',goodsInfo,(result)=>{
+          if(result.status == 1){
+            message.success(result.data);
+            setTimeout(()=>{
+              hashHistory.replace('/goodsManagerPage');
+            },1500);
+          }else{
+            message.error(result.data);
+          }
+        });
       });
     }
 
